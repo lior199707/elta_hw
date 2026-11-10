@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "findings/chunk-NNN.json",
+  "type": "object",
+  "required": ["chunk", "findings"],
+  "properties": {
+    "chunk": { "type": "string", "pattern": "^chunk-[0-9]{3}$" },
+    "findings": {
+      "type": "array",
+      "description": "Empty list when the chunk was checked and nothing was found",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "block_id", "quote", "explanation", "severity"],
+        "properties": {
+          "rule_id": { "type": "string", "pattern": "^R[1-9][0-9]*$" },
+          "block_id": { "type": "string", "pattern": "^B[1-9][0-9]*$" },
+          "quote": { "type": "string", "minLength": 1, "description": "Exact substring of the block text" },
+          "explanation": { "type": "string", "minLength": 1 },
+          "severity": { "enum": ["high", "medium", "low"] }
+        }
+      }
+    }
+  }
+}

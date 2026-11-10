@@ -1,0 +1,14 @@
+# Development override for the backend: hot reload from the mounted source, no rebuild needed for
+# code changes. The frontend runs locally with Vite (`uv run poe fe-dev`, http://localhost:5173),
+# which proxies /api to this backend on localhost:8000.
+# Rebuild (`uv run poe up`) after backend dependency changes (pyproject.toml / uv.lock).
+services:
+  backend:
+    command: ["uvicorn", "doc_checker.main:build_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/src"]
+    environment:
+      # Mounted source shadows the copy installed in .venv because PYTHONPATH precedes site-packages.
+      PYTHONPATH: /app/src
+      # Bind mounts from Windows do not deliver file-change events into the Linux VM.
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./backend/src:/app/src:ro

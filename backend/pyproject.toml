@@ -1,0 +1,76 @@
+[project]
+name = "doc-checker"
+version = "0.1.0"
+description = "LLM-based document rule compliance checker (backend API)"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.162.3",
+    "google-genai>=3.0.0",
+    "httpx2>=2.16.0",
+    "lxml>=6.1.3",
+    "pydantic-settings>=2.16.2",
+    "python-docx>=1.2.0",
+    "python-multipart>=0.0.33",
+    "sqlmodel>=0.0.48",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "N"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: calls the real Gemini API (needs GEMINI_API_KEY)"]
+addopts = "-m 'not integration'"
+
+[dependency-groups]
+dev = [
+    "lxml-stubs>=0.5.1",
+    "poethepoet>=0.49.0",
+    "pytest>=9.2.0",
+    "ruff>=0.17.4",
+    "ty>=0.0.100",
+]
+
+[tool.poe]
+# npm is npm.cmd on Windows, which direct process spawning cannot find; run it through a shell.
+shell_interpreter = ["posix", "powershell"]
+
+[tool.poe.tasks]
+dev = { cmd = "uvicorn doc_checker.main:build_app --factory --reload --port 8000", envfile = "../.env", help = "Run the API locally with hot reload (reads ../.env)" }
+test = { cmd = "pytest", help = "Run unit tests (extra args are passed to pytest)" }
+test-integration = { cmd = "pytest -m integration -s", envfile = "../.env", help = "Run live tests against the real Gemini API (reads ../.env, uses quota)" }
+lint = { cmd = "ruff check . ../skills", help = "Lint with ruff (backend and Agent Skill scripts)" }
+lint-fix = { cmd = "ruff check . --fix", help = "Lint and auto-fix safe violations" }
+format = { cmd = "ruff format . ../skills", help = "Format code with ruff" }
+format-check = { cmd = "ruff format --check . ../skills", help = "Verify formatting without writing" }
+typecheck = { cmd = "ty check", help = "Type check with ty" }
+check = { sequence = ["lint", "format-check", "typecheck", "test"], help = "Full quality gate: lint, format check, type check, tests" }
+up = { cmd = "docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d backend", cwd = "..", help = "Start the backend in Docker with hot reload (pair with `fe-dev`)" }
+up-prod = { cmd = "docker compose -f docker-compose.yml up --build -d", cwd = "..", help = "Build and start the full production-like stack (what a reviewer runs) on :8080" }
+down = { cmd = "docker compose down", cwd = "..", help = "Stop the Docker stack" }
+logs = { cmd = "docker compose logs -f", cwd = "..", help = "Follow Docker stack logs" }
+fe-dev = { shell = "npm run dev", cwd = "../frontend", help = "Vite dev server on :5173 (local Node), proxies /api to localhost:8000" }
+fe-install = { shell = "npm ci", cwd = "../frontend", help = "Install frontend dependencies from package-lock.json" }
+fe-lint = { shell = "npm run lint", cwd = "../frontend", help = "ESLint the frontend" }
+fe-format = { shell = "npm run format", cwd = "../frontend", help = "Format the frontend with Prettier" }
+fe-format-check = { shell = "npm run format:check", cwd = "../frontend", help = "Verify frontend formatting" }
+fe-typecheck = { shell = "npm run typecheck", cwd = "../frontend", help = "Type check the frontend (tsc, strict)" }
+fe-test = { shell = "npm run test:unit", cwd = "../frontend", help = "Run frontend unit tests (Vitest)" }
+fe-build = { shell = "npm run build", cwd = "../frontend", help = "Production build of the frontend" }
+fe-e2e = { shell = "npm run test:e2e", cwd = "../frontend", help = "Run Playwright end-to-end tests (mocked network, local Chromium)" }
+fe-e2e-backend = { shell = "npm run test:e2e:backend", cwd = "../frontend", help = "Full-stack Playwright test of the rules lifecycle against the running backend (needs `poe up`; no Gemini calls)" }
+samples = { cmd = "python -m tests.fixtures.sample_documents ../samples", help = "Write the easy/medium/hard sample DOCX files to samples/" }
+eval-live = { cmd = "pytest -m integration -s tests/integration/test_live_evaluation.py", envfile = "../.env", help = "Score the real Gemini model on the sample documents (uses quota: about 4 requests)" }
+skill-test = { cmd = "pytest tests/unit/skill", help = "Test the Agent Skill scripts (incl. extraction parity with the backend)" }
+fe-check = { sequence = ["fe-lint", "fe-format-check", "fe-typecheck", "fe-test"], help = "Frontend quality gate: lint, format check, type check, unit tests" }

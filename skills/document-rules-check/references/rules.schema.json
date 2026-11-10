@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "rules.json",
+  "type": "object",
+  "required": ["rules"],
+  "additionalProperties": false,
+  "properties": {
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^R[1-9][0-9]*$", "description": "Unique: R1, R2, ..." },
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "text": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "examples": { "type": "array", "items": { "type": "string" }, "description": "Passages that DO violate the rule" },
+          "non_examples": { "type": "array", "items": { "type": "string" }, "description": "Passages that do NOT violate it" }
+        }
+      }
+    }
+  }
+}

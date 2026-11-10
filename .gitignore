@@ -1,0 +1,27 @@
+# >>> core-dev-conventions (managed, do not edit inside) >>>
+apm_modules/
+.claude/settings.local.json
+# <<< core-dev-conventions <<<
+
+.env
+.claude
+CLAUDE.md
+apm*
+# Python backend
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.db
+*.egg-info/
+
+# Agent Skill workspaces (created next to checked documents)
+*.rules-check/
+
+# Editors and OS files (anywhere in the repository)
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
